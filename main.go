@@ -15,6 +15,7 @@ import (
 var monitorListenAddr = flag.String("listen-address", ":8090", "The address to listen on for HTTP requests.")
 var logLevel = flag.String("log-level", "info", "Log level of logrus(trace/debug/info/warn/error/fatal/panic).")
 var addressPattern = flag.String("pattern", "", "Pattern for matching abstract socket file")
+var metricsPath = flag.String("metrics-path", "/metrics", "Metrics path that socket is serving on")
 
 // These values are overridden via ldflags
 var (

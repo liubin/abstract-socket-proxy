@@ -37,7 +37,7 @@ func doGet(socketAddr string, timeoutInSeconds time.Duration, urlPath string) ([
 		return nil, err
 	}
 
-	resp, err := client.Get(fmt.Sprintf("http://shim/%s", urlPath))
+	resp, err := client.Get(fmt.Sprintf("http://shim%s", urlPath))
 	if err != nil {
 		return nil, err
 	}

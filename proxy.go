@@ -276,11 +276,12 @@ func aggregateSocketMetrics(encoder expfmt.Encoder) error {
 }
 
 func getSocketMetrics(socketAddr string, tags map[string]string) ([]*dto.MetricFamily, error) {
-	body, err := doGet(socketAddr, defaultTimeout, "metrics")
+	body, err := doGet(socketAddr, defaultTimeout, *metricsPath)
 	if err != nil {
 		return nil, err
 	}
 
+	logger.WithField("metricsPath", *metricsPath).Debugf("getSocketMetrics")
 	return parsePrometheusMetrics(tags, body)
 }
 
