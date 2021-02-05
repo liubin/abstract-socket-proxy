@@ -120,10 +120,6 @@ func encodeMetricFamily(mfs []*dto.MetricFamily, encoder expfmt.Encoder) error {
 	for i := range mfs {
 		metricFamily := mfs[i]
 
-		// if metricFamily.Name != nil && !strings.HasPrefix(*metricFamily.Name, promNamespaceMonitor) {
-		// 	metricFamily.Name = string2Pointer(promNamespaceMonitor + "_" + *metricFamily.Name)
-		// }
-
 		// encode and write to output
 		if err := encoder.Encode(metricFamily); err != nil {
 			return err
