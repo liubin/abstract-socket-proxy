@@ -145,7 +145,7 @@ func readUnixSocketFile() (string, error) {
 	return string(bytes), nil
 }
 
-func getSocketAddrs() ([]socketAddr, error) {
+func getSocketAddrs() (map[string]socketAddr, error) {
 	body, err := readUnixSocketFile()
 	if err != nil {
 		return nil, err
@@ -153,12 +153,12 @@ func getSocketAddrs() ([]socketAddr, error) {
 	return parseSocketAddrs(body)
 }
 
-func parseSocketAddrs(body string) ([]socketAddr, error) {
+func parseSocketAddrs(body string) (map[string]socketAddr, error) {
 	if matchPattern == nil {
 		return nil, fmt.Errorf("matchPattern not set")
 	}
 
-	socketAddrs := []socketAddr{}
+	socketAddrs := map[string]socketAddr{}
 	lines := strings.Split(body, "\n")
 
 	for _, line := range lines {
@@ -173,16 +173,22 @@ func parseSocketAddrs(body string) ([]socketAddr, error) {
 			continue
 		}
 
+		// remove @ at head and tail
+		addr = strings.ReplaceAll(addr, "@", "")
+		if _, found := socketAddrs[addr]; found {
+			continue
+		}
+
 		tags := map[string]string{}
 		for i, name := range matchPattern.SubexpNames() {
 			if i != 0 && name != "" {
 				tags[name] = match[i]
 			}
 		}
-		socketAddrs = append(socketAddrs, socketAddr{
-			addr: strings.ReplaceAll(addr, "@", ""),
+		socketAddrs[addr] = socketAddr{
+			addr: addr,
 			tags: tags,
-		})
+		}
 	}
 
 	return socketAddrs, nil
@@ -209,7 +215,7 @@ func aggregateSocketMetrics(encoder expfmt.Encoder) error {
 	results := make(chan []*dto.MetricFamily, len(socketAddrs))
 
 	// get metrics from one socket's
-	for i := range socketAddrs {
+	for _, sa := range socketAddrs {
 		wg.Add(1)
 		go func(sa socketAddr, results chan<- []*dto.MetricFamily) {
 			socketMetrics, err := getSocketMetrics(sa.addr, sa.tags)
@@ -220,9 +226,9 @@ func aggregateSocketMetrics(encoder expfmt.Encoder) error {
 			results <- socketMetrics
 			wg.Done()
 			logger.WithField("addr", sa.addr).Debug("job finished")
-		}(socketAddrs[i], results)
+		}(sa, results)
 
-		logger.WithField("addr", socketAddrs[i]).Debug("job started")
+		logger.WithField("socketAddr", sa).Debug("job started")
 	}
 
 	wg.Wait()

@@ -22,9 +22,11 @@ func TestParseSocketAddrs(t *testing.T) {
 	result, err := parseSocketAddrs(data)
 	assert.Nil(err, "err should be nil")
 	assert.Equal(1, len(result))
-	assert.Equal("/containerd-shim/k8s.io/fb76908c5f81e5820226357191af190b8623fa914932926196d80a8a5587161b/shim-monitor.sock", result[0].addr, "addr is not expected")
+	for addrFile, socketAddr := range result {
+		assert.Equal("/containerd-shim/k8s.io/fb76908c5f81e5820226357191af190b8623fa914932926196d80a8a5587161b/shim-monitor.sock", addrFile, "addr is not expected")
 
-	assert.Equal(map[string]string{
-		"sandbox": "fb76908c5f81e5820226357191af190b8623fa914932926196d80a8a5587161b",
-	}, result[0].tags, "tags is not expected")
+		assert.Equal(map[string]string{
+			"sandbox": "fb76908c5f81e5820226357191af190b8623fa914932926196d80a8a5587161b",
+		}, socketAddr.tags, "tags is not expected")
+	}
 }
